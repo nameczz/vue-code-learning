@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>如何监听一个对象的变化</title>
+</head>
+<body>
+	
+</body>
+<script type="text/javascript">
+	// 观察者构造函数
+	function Observer (data) {
+		this.data = data;
+		this.walk(data);
+	}
+	// 原型赋值给Obj变量
+
+	var o = Observer.prototype;
+
+	o.walk = function (obj) {
+		var val;
+		for (var key in obj) {
+			// for in 会把原型链上所有的key 都列举出来
+			// 用hasOwnProperty就可以值拿到属于obj本身的属性
+			// 然后判断obj[key]是不是一个对象，若是就递归
+			if (obj.hasOwnProperty(key)) {
+				val = obj[key];
+
+				if (typeof val === 'object') {
+					new Observer(val);
+				}
+				console.log(val);
+				// 进行set get 绑定
+				this.convert(key, val);
+			}
+		}
+	}
+
+	o.convert = function (key, val) {
+		Object.defineProperty(this.data, key, {
+			// 能否通过for in 进行获取
+			enumerable: true,
+			// 能否通过delete进行删除
+			configurable: true,
+			// 在读取属性时进行调用的函数
+			get: function () {
+				console.log(`你正在读取key为: ${key}, value: ${val}`);
+				return val;
+			},
+			// 在设置属性时进行调用的函数 有newval参数 
+			set: function (newVal) {
+				console.log(`你的原始key为: ${key}, value: ${val}`);
+				console.log(`你设置的新key为: ${key}, value: ${newVal}`);
+				if (newVal === val) return;
+				val = new newVal;
+			}
+		})
+	}
+
+	var data = {
+		user: {
+			name: 'czz',
+			age: 20
+		},
+		address: {
+			country: {
+				city: 'shanghai',
+				area: 'pudongxinqu'
+			}
+		}
+	}
+
+	var app = new Observer(data);
+</script>
+</html>
